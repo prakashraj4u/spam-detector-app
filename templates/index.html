@@ -1,234 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spam Detector</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            background: #000;
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 30px 16px;
-        }
-        canvas#bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 0;
-        }
-        .wrap { position: relative; z-index: 1; width: 100%; max-width: 560px; }
-        .glass {
-            background: rgba(10,10,30,0.75);
-            border: 1px solid rgba(100,100,255,0.25);
-            border-radius: 20px;
-            padding: 36px 32px;
-            backdrop-filter: blur(12px);
-            transform: perspective(900px) rotateX(2deg);
-            transition: transform 0.3s;
-        }
-        .glass:hover { transform: perspective(900px) rotateX(0deg); }
-        .hdr { text-align: center; margin-bottom: 32px; }
-        .hdr .orb {
-            width: 64px; height: 64px; border-radius: 50%;
-            background: linear-gradient(135deg, #6c63ff, #00d4ff);
-            margin: 0 auto 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%,100% { box-shadow: 0 0 30px rgba(108,99,255,0.6); }
-            50% { box-shadow: 0 0 60px rgba(0,212,255,0.8); }
-        }
-        .hdr h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 22px; font-weight: 900;
-            background: linear-gradient(90deg, #6c63ff, #00d4ff, #ff6b9d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
-        }
-        .hdr p { color: rgba(180,180,220,0.7); font-size: 13px; margin-top: 6px; letter-spacing: 1px; }
-        .lbl {
-            font-size: 11px; font-weight: 600;
-            color: rgba(108,99,255,0.9);
-            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
-        }
-        textarea {
-            width: 100%;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(108,99,255,0.3);
-            border-radius: 12px; padding: 14px;
-            font-size: 14px; color: #c8c8f0;
-            resize: vertical; min-height: 110px; outline: none;
-            font-family: 'Rajdhani', sans-serif;
-            transition: border 0.3s, box-shadow 0.3s;
-        }
-        textarea:focus { border-color: #6c63ff; box-shadow: 0 0 20px rgba(108,99,255,0.3); }
-        textarea::placeholder { color: rgba(100,100,160,0.5); }
-        .btn-primary {
-            width: 100%; margin-top: 12px; padding: 14px;
-            border-radius: 12px; border: none;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            font-family: 'Orbitron', sans-serif; letter-spacing: 1px;
-            background: linear-gradient(135deg, #6c63ff, #00d4ff);
-            color: #fff; transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,99,255,0.5); }
-        .btn-primary:active { transform: scale(0.98); }
-        .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
-        .divider hr { flex: 1; border: none; border-top: 1px solid rgba(108,99,255,0.2); }
-        .divider span { font-size: 11px; color: rgba(108,99,255,0.5); letter-spacing: 2px; }
-        .upload-box {
-            display: block; width: 100%;
-            background: rgba(255,255,255,0.02);
-            border: 1px dashed rgba(0,212,255,0.3);
-            border-radius: 12px; padding: 22px; text-align: center; cursor: pointer;
-            transition: border 0.3s, background 0.3s;
-        }
-        .upload-box:hover { border-color: #00d4ff; background: rgba(0,212,255,0.05); }
-        .upload-box .u-icon { font-size: 26px; margin-bottom: 6px; }
-        .upload-box p { font-size: 13px; color: rgba(0,212,255,0.6); letter-spacing: 1px; }
-        .upload-box .fname { font-size: 12px; color: rgba(0,212,255,0.4); margin-top: 4px; }
-        input[type=file] { display: none; }
-        .btn-secondary {
-            width: 100%; margin-top: 10px; padding: 14px;
-            border-radius: 12px; border: 1px solid rgba(0,212,255,0.3);
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            font-family: 'Orbitron', sans-serif; letter-spacing: 1px;
-            background: transparent; color: #00d4ff; transition: all 0.2s;
-        }
-        .btn-secondary:hover { background: rgba(0,212,255,0.1); box-shadow: 0 0 20px rgba(0,212,255,0.2); }
-        .result-spam {
-            margin-top: 20px; padding: 18px; border-radius: 12px; text-align: center;
-            font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700;
-            background: rgba(255,50,50,0.1); border: 1px solid rgba(255,80,80,0.4);
-            color: #ff6b6b; animation: glowRed 1.5s infinite; letter-spacing: 1px;
-        }
-        @keyframes glowRed {
-            0%,100% { box-shadow: 0 0 10px rgba(255,80,80,0.3); }
-            50% { box-shadow: 0 0 30px rgba(255,80,80,0.6); }
-        }
-        .result-safe {
-            margin-top: 20px; padding: 18px; border-radius: 12px; text-align: center;
-            font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700;
-            background: rgba(0,255,120,0.08); border: 1px solid rgba(0,255,120,0.3);
-            color: #00ff88; animation: glowGreen 1.5s infinite; letter-spacing: 1px;
-        }
-        @keyframes glowGreen {
-            0%,100% { box-shadow: 0 0 10px rgba(0,255,120,0.2); }
-            50% { box-shadow: 0 0 30px rgba(0,255,120,0.5); }
-        }
-        .result-warn {
-            margin-top: 20px; padding: 18px; border-radius: 12px; text-align: center;
-            font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700;
-            background: rgba(255,200,0,0.08); border: 1px solid rgba(255,200,0,0.3);
-            color: #ffc400; letter-spacing: 1px;
-        }
-        .extracted {
-            margin-top: 14px; background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(108,99,255,0.2);
-            border-radius: 12px; padding: 14px;
-            font-size: 13px; color: rgba(180,180,220,0.7); white-space: pre-wrap;
-        }
-        .extracted strong {
-            display: block; margin-bottom: 6px;
-            color: rgba(108,99,255,0.8); font-size: 11px;
-            text-transform: uppercase; letter-spacing: 2px;
-        }
-    </style>
+
+    <!-- ✅ This is how you link CSS in Flask -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <canvas id="bg"></canvas>
+<div class="divider"><hr><span>OR</span><hr></div>
 
-    <div class="wrap">
-        <div class="glass">
-            <div class="hdr">
-                <div class="orb">📩</div>
-                <h1>SPAM DETECTOR</h1>
-                <p>AI-POWERED MESSAGE ANALYSIS</p>
-            </div>
+<div class="lbl">Check a suspicious link</div>
+<form action="/predict" method="POST">
+    <input type="url" name="url" placeholder="https://suspicious-link.com" 
+           style="width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,100,100,0.3); border-radius:12px; padding:14px; font-size:14px; color:#c8c8f0; outline:none; font-family:'Rajdhani',sans-serif;">
+    <button type="submit" class="btn-url">🔗 SCAN LINK</button>
+</form>
 
-            <div class="lbl">Analyze text message</div>
-            <form action="/predict" method="POST">
-                <textarea name="message" placeholder="Paste your message here..."></textarea>
-                <button type="submit" class="btn-primary">⚡ SCAN MESSAGE</button>
-            </form>
-
-            <div class="divider"><hr><span>OR</span><hr></div>
-
-            <div class="lbl">Upload image (OCR scan)</div>
-            <form action="/predict" method="POST" enctype="multipart/form-data">
-                <label class="upload-box">
-                    <div class="u-icon">🖼️</div>
-                    <p>Drop image here or click to upload</p>
-                    <div class="fname" id="fname">No file selected</div>
-                    <input type="file" name="image" accept="image/*"
-                           onchange="document.getElementById('fname').textContent=this.files[0]?.name||'No file selected'">
-                </label>
-                <button type="submit" class="btn-secondary">🔬 UPLOAD & SCAN</button>
-            </form>
-
-            {% if prediction %}
-                {% if "SPAM" in prediction %}
-                    <div class="result-spam">🚨 {{ prediction }}</div>
-                {% elif "Not Spam" in prediction %}
-                    <div class="result-safe">✅ {{ prediction }}</div>
-                {% else %}
-                    <div class="result-warn">⚠️ {{ prediction }}</div>
-                {% endif %}
-            {% endif %}
-
-            {% if extracted_text %}
-                <div class="extracted">
-                    <strong>📝 Text extracted from image</strong>
-                    {{ extracted_text }}
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <script>
-        const c = document.getElementById('bg');
-        const ctx = c.getContext('2d');
-        let W, H, pts = [];
-        function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; init(); }
-        function init() {
-            pts = [];
-            for (let i = 0; i < 100; i++) pts.push({
-                x: Math.random()*W, y: Math.random()*H,
-                vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
-                r: Math.random()*2+1
-            });
-        }
-        function draw() {
-            ctx.clearRect(0,0,W,H);
-            ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
-            pts.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if(p.x<0||p.x>W) p.vx*=-1;
-                if(p.y<0||p.y>H) p.vy*=-1;
-                ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-                ctx.fillStyle = 'rgba(108,99,255,0.6)'; ctx.fill();
-            });
-            pts.forEach((a,i) => { pts.slice(i+1).forEach(b => {
-                const d = Math.hypot(a.x-b.x, a.y-b.y);
-                if(d<120) {
-                    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
-                    ctx.strokeStyle = `rgba(108,99,255,${0.15*(1-d/120)})`;
-                    ctx.lineWidth = 0.5; ctx.stroke();
-                }
-            })});
-            requestAnimationFrame(draw);
-        }
-        resize(); window.addEventListener('resize', resize); draw();
-    </script>
-</body>
-</html>
+{% if url_result %}
+    {% if url_result.status == "DANGEROUS" %}
+        <div class="result-spam">{{ url_result.message }}</div>
+    {% elif url_result.status == "SAFE" %}
+        <div class="result-safe">{{ url_result.message }}</div>
+    {% else %}
+        <div class="result-warn">{{ url_result.message }}</div>
+    {% endif %}
+{% endif %}

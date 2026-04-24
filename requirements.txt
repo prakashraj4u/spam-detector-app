@@ -5,3 +5,5 @@ numpy
 pytesseract
 pillow
 gunicorn
+python-dotenv
+requests
